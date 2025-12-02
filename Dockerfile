@@ -89,6 +89,12 @@ RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
         exit 1; \
     fi && \
     dpkg -i /tmp/wechat.deb 2>&1 | tee /tmp/wechat_install.log && \
+    # 从安装日志中提取版本号
+    WECHAT_VERSION=$(grep -o 'Unpacking wechat ([0-9.]*)' /tmp/wechat_install.log | sed 's/Unpacking wechat (\(.*\))/\1/') && \
+    # 创建 APP_VERSION 环境变量文件
+    echo '#!/bin/sh' > /etc/cont-env.d/APP_VERSION && \
+    echo "export APP_VERSION=\"$WECHAT_VERSION\"" >> /etc/cont-env.d/APP_VERSION && \
+    chmod +x /etc/cont-env.d/APP_VERSION && \
     rm /tmp/wechat.deb
 
 ENV XMODIFIERS="@im=fcitx"
@@ -127,6 +133,3 @@ RUN mkdir -p /opt && \
 VOLUME /root/.xwechat
 VOLUME /root/xwechat_files
 VOLUME /root/downloads
-
-# 配置微信版本号
-RUN set-cont-env APP_VERSION "$(grep -o 'Unpacking wechat ([0-9.]*)' /tmp/wechat_install.log | sed 's/Unpacking wechat (\(.*\))/\1/')" || true
