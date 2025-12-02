@@ -73,7 +73,7 @@ RUN APP_ICON_URL=https://res.wx.qq.com/a/wx_fed/assets/res/NTI4MWU5.ico && \
     install_app_icon.sh "$APP_ICON_URL"
     
 # 设置应用名称
-RUN set-cont-env APP_NAME "微信中文版"
+ENV APP_NAME="WeChat"
 
 # 根据目标平台下载并安装对应的微信安装包
 RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
