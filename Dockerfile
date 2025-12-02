@@ -68,12 +68,16 @@ RUN \
     rm -rf /var/lib/apt/lists/* && \
     rm -rf /tmp/packages
 
+# 修复：创建必要的环境变量配置文件
+RUN mkdir -p /etc/cont-env.d && \
+    # 创建 APP_NAME 环境变量文件，使用简单的方式设置
+    echo '#!/bin/sh' > /etc/cont-env.d/APP_NAME && \
+    echo 'export APP_NAME="WeChat"' >> /etc/cont-env.d/APP_NAME && \
+    chmod +x /etc/cont-env.d/APP_NAME
+
 # 生成微信图标
 RUN APP_ICON_URL=https://res.wx.qq.com/a/wx_fed/assets/res/NTI4MWU5.ico && \
     install_app_icon.sh "$APP_ICON_URL"
-    
-# 设置应用名称
-ENV APP_NAME="WeChat"
 
 # 根据目标平台下载并安装对应的微信安装包
 RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
@@ -102,9 +106,27 @@ RUN echo '#!/bin/sh' > /startapp.sh && \
     echo 'exec /startapp-enhanced.sh' >> /startapp.sh && \
     chmod +x /startapp.sh
 
+# 修复：确保应用可执行文件存在
+RUN mkdir -p /opt && \
+    # 检查微信可执行文件
+    if [ -f /usr/bin/wechat ]; then \
+        echo "#!/bin/sh" > /opt/app && \
+        echo "exec /usr/bin/wechat" >> /opt/app && \
+        chmod +x /opt/app; \
+    elif [ -f /usr/bin/weixin ]; then \
+        echo "#!/bin/sh" > /opt/app && \
+        echo "exec /usr/bin/weixin" >> /opt/app && \
+        chmod +x /opt/app; \
+    else \
+        echo "#!/bin/sh" > /opt/app && \
+        echo "echo 'WeChat executable not found. Please check installation.'" >> /opt/app && \
+        echo "exit 1" >> /opt/app && \
+        chmod +x /opt/app; \
+    fi
+
 VOLUME /root/.xwechat
 VOLUME /root/xwechat_files
 VOLUME /root/downloads
 
 # 配置微信版本号
-RUN set-cont-env APP_VERSION "$(grep -o 'Unpacking wechat ([0-9.]*)' /tmp/wechat_install.log | sed 's/Unpacking wechat (\(.*\))/\1/')"
+RUN set-cont-env APP_VERSION "$(grep -o 'Unpacking wechat ([0-9.]*)' /tmp/wechat_install.log | sed 's/Unpacking wechat (\(.*\))/\1/')" || true
