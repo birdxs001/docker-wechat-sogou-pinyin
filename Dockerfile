@@ -81,9 +81,9 @@ RUN APP_ICON_URL=https://res.wx.qq.com/a/wx_fed/assets/res/NTI4MWU5.ico && \
 
 # 根据目标平台下载并安装对应的微信安装包
 RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
-        curl -o /tmp/wechat.deb "https://dldir1v6.qq.com/weixin/Universal/Linux/WeChatLinux_x86_64.deb"; \
+        curl -k --retry 3 --connect-timeout 30 -o /tmp/wechat.deb "https://dldir1v6.qq.com/weixin/Universal/Linux/WeChatLinux_x86_64.deb"; \
     elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
-        curl -o /tmp/wechat.deb "https://dldir1v6.qq.com/weixin/Universal/Linux/WeChatLinux_arm64.deb"; \
+        curl -k --retry 3 --connect-timeout 30 -o /tmp/wechat.deb "https://dldir1v6.qq.com/weixin/Universal/Linux/WeChatLinux_arm64.deb"; \
     else \
         echo "Unsupported platform: $TARGETPLATFORM"; \
         exit 1; \
